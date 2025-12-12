@@ -4,10 +4,10 @@ The results showed significant differences in the performance of the software wi
 and even after applying tuning, the results weren't good enough to apply in hardware. On the other hand, the "Spiral" trajectory simulation shows promising results for the software.
 All you need to run the code and see the results is to have installed the required libraries , "matplotlib", "numpy" and "scipy". 
 "Results" file contains the software simulation results, 
-S1NoDisturbances: Simulation 1 with no disturbances
-S1-Disturbances: Simulation 1 with applied disturbances
-S2NoDisturbances: Simulation 2 with no disturbances
-S2-Disturbances: Simulation 2 with applied disturbances
+S1NoDisturbances: Simulation 1 with no disturbances,
+S1-Disturbances: Simulation 1 with applied disturbances,
+S2NoDisturbances: Simulation 2 with no disturbances,
+S2-Disturbances: Simulation 2 with applied disturbances.
 
 For the hardware part, as we get great results in the simulated "Spiral" trajectory, so we applied the hardware only on this trajectory. 
 We worked on the DJI Tello drone in the lab, we installed the required libraries to work with python.
