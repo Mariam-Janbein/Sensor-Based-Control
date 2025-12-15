@@ -14,8 +14,6 @@ rho_y = 2.9842e-3  # b, thrust coeff
 rho_z = 3.2320e-2  # k, drag coeff
 d = 0.225  # Arm length (typical value, not in paper)
 
-
-
 K1_base = 0.012
 K2_base = 0.012
 K3_base = 0.012
@@ -32,103 +30,47 @@ N1 = 1 / Ix
 N2 = 1 / Iy
 N3 = 1 / Iz
 
-# Control parameters from Table 2 (we applied tuning for these variables to improve the results)
-lamb1 = 1.0  # Xi1
-# lamb1 = 2.0
-# lamb2 = 0.1
+# Control parameters from Table 2
+lamb1 = 1.5  # Xi1
+lamb2 = 1.5  # Reduced for stability (paper uses 0.5; you can revert if needed) 0.25 , 0.75 better than 0.5 , 0.95 also better , 1.5 best
 
-lamb2 = 0.4  # Xi2 increased for better z tracking
+m_mu = 0.9 # mu_i for all
 
-m_mu = 1.0  # mu_i for all
-
-beta_pos = 2.1487
-gamma_pos = 1.1
-
+beta_pos = 2.1487  # Revert to paper
+gamma_pos = 1.1  # Revert to paper
 k1_pos = 6.0
-k2_pos = 1.0
+k2_pos = 2.0
 
 beta_att = 102.15
 gamma_att = 1.9
 k1_att = 817.6194
 k2_att = 2.6997
 
-# Smoothing epsilon
-# eps_pos = 0.05
-# eps_pos = 0.005
-eps_pos = 0.025
-
-# eps_att = 0.5
+# Smoothing epsilon increased
+eps_pos = 0.05
 eps_att = 1.0
 
-
-# Desired trajectory for Simulation 1 (Eq 40-41)
+# Desired trajectory for Simulation 2
 def desired_pos(t):
-    if 0 <= t < 4 * np.pi:
-        xdes = 0.5 * np.cos(0.5 * t)
-        dxdes = -0.25 * np.sin(0.5 * t)
-        ddxdes = -0.125 * np.cos(0.5 * t)
-        ydes = 0.5 * np.sin(0.5 * t)
-        dydes = 0.25 * np.cos(0.5 * t)
-        ddydes = -0.125 * np.sin(0.5 * t)
-        zdes = 0.125 * t + 1
-        dzdes = 0.125
-        ddzdes = 0.0
-    elif 4 * np.pi <= t < 20:
-        xdes = 0.5
-        dxdes = 0.0
-        ddxdes = 0.0
-        ydes = 0.25 * t - 3.14
-        dydes = 0.25
-        ddydes = 0.0
-        zdes = 0.5 * np.pi + 1
-        dzdes = 0.0
-        ddzdes = 0.0
-    elif 20 <= t < 30:
-        xdes = 0.25 * t - 4.5
-        dxdes = 0.25
-        ddxdes = 0.0
-        ydes = 5 - np.pi
-        dydes = 0.0
-        ddydes = 0.0
-        zdes = 0.5 * np.pi + 1
-        dzdes = 0.0
-        ddzdes = 0.0
-    elif 30 <= t < 40:
-        xdes = 3
-        dxdes = 0.0
-        ddxdes = 0.0
-        ydes = -0.2358 * t + 8.94
-        dydes = -0.2358
-        ddydes = 0.0
-        zdes = 0.5 * np.pi + 1
-        dzdes = 0.0
-        ddzdes = 0.0
-    else:
-        xdes = 3
-        dxdes = 0.0
-        ddxdes = 0.0
-        ydes = -0.5
-        dydes = 0.0
-        ddydes = 0.0
-        zdes = np.exp(-0.2 * t + 8.944)
-        dzdes = -0.2 * np.exp(-0.2 * t + 8.944)
-        ddzdes = 0.04 * np.exp(-0.2 * t + 8.944)
-
+    xdes = np.sin(0.5 * t)
+    dxdes = 0.5 * np.cos(0.5 * t)
+    ddxdes = -0.25 * np.sin(0.5 * t)
+    ydes = np.cos(0.5 * t)
+    dydes = -0.5 * np.sin(0.5 * t)
+    ddydes = -0.25 * np.cos(0.5 * t)
+    zdes = 0.1 * t + 2
+    dzdes = 0.1
+    ddzdes = 0.0
     return xdes, dxdes, ddxdes, ydes, dydes, ddydes, zdes, dzdes, ddzdes
 
 def desired_psi(t):
-    if 0 <= t < 50:
-        psides = np.pi / 4
-    else:
-        psides = 0
+    psides = 0.3
     dpsides = 0.0
     ddpsides = 0.0
     return psides, dpsides, ddpsides
 
-# Disturbances (0 for Sim1; uncomment Eq 43 for Sim1)
+# Disturbances for Simulation 2 (Eq 43)
 def disturbances(t):
-    return 0, 0, 0, 0, 0, 0
-
     # Dx = 1 + np.sin(0.2 * np.pi * t)
     # Dy = 1 + np.cos(0.2 * np.pi * t)
     # Dz = 0.5 * np.cos(0.7 * t) + 0.7 * np.sin(0.3 * t)
@@ -136,7 +78,7 @@ def disturbances(t):
     # Dtheta = 2 * np.cos(0.9 * t) + 1
     # Dpsi = 2 * np.tanh(0.7 * t)
     # return Dx, Dy, Dz, Dphi, Dtheta, Dpsi
-
+    return 0,0,0,0,0,0
 
 
 # Dynamics function
@@ -194,6 +136,16 @@ def dynamics(state, t):
     sign_s9 = s9 / (np.abs(s9) + eps_pos)
     sign_s11 = s11 / (np.abs(s11) + eps_pos)
 
+    # NEW: Hyperplane variables (Eq 10)
+    sigma7 = s7 + (1 / beta_pos) * sign_ds7 * (abs_ds7 ** gamma_pos)
+    sigma9 = s9 + (1 / beta_pos) * sign_ds9 * (abs_ds9 ** gamma_pos)
+    sigma11 = s11 + (1 / beta_pos) * sign_ds11 * (abs_ds11 ** gamma_pos)
+
+    # Smooth sign for sigma
+    sign_sigma7 = sigma7 / (np.abs(sigma7) + eps_pos)
+    sign_sigma9 = sigma9 / (np.abs(sigma9) + eps_pos)
+    sign_sigma11 = sigma11 / (np.abs(sigma11) + eps_pos)
+
     # Position continuous (Eq 17)
     term_x = m_mu * lamb2**2 / lamb1 * np.abs(ex)**(2*m_mu - 1) * np.sign(ex)
     vxc = ddxdes - M9 * dx + 1 / lamb1 * (term_x - beta_pos / gamma_pos * sign_ds7 * abs_ds7**(2 - gamma_pos))
@@ -202,10 +154,10 @@ def dynamics(state, t):
     term_z = m_mu * lamb2**2 / lamb1 * np.abs(ez)**(2*m_mu - 1) * np.sign(ez)
     vzc = ddzdes - M11 * dz + g + 1 / lamb1 * (term_z - beta_pos / gamma_pos * sign_ds11 * abs_ds11**(2 - gamma_pos))
 
-    # Position switching (Eq 18)
-    vxs = 1 / lamb1 * (-k1_pos * s7 - k2_pos * sign_s7)
-    vys = 1 / lamb1 * (-k1_pos * s9 - k2_pos * sign_s9)
-    vzs = 1 / lamb1 * (-k1_pos * s11 - k2_pos * sign_s11)
+    # Position switching (Eq 18) -- FIXED to use sigma instead of s
+    vxs = 1 / lamb1 * (-k1_pos * sigma7 - k2_pos * sign_sigma7)
+    vys = 1 / lamb1 * (-k1_pos * sigma9 - k2_pos * sign_sigma9)
+    vzs = 1 / lamb1 * (-k1_pos * sigma11 - k2_pos * sign_sigma11)
 
     vx = vxc + vxs
     vy = vyc + vys
@@ -248,6 +200,16 @@ def dynamics(state, t):
     sign_s3 = s3 / (np.abs(s3) + eps_att)
     sign_s5 = s5 / (np.abs(s5) + eps_att)
 
+    # NEW: Hyperplane variables (Eq 27)
+    sigma1 = s1 + (1 / beta_att) * sign_ds1 * (abs_ds1 ** gamma_att)
+    sigma3 = s3 + (1 / beta_att) * sign_ds3 * (abs_ds3 ** gamma_att)
+    sigma5 = s5 + (1 / beta_att) * sign_ds5 * (abs_ds5 ** gamma_att)
+
+    # Smooth sign for sigma
+    sign_sigma1 = sigma1 / (np.abs(sigma1) + eps_att)
+    sign_sigma3 = sigma3 / (np.abs(sigma3) + eps_att)
+    sign_sigma5 = sigma5 / (np.abs(sigma5) + eps_att)
+
     # Attitude continuous (Eq 29)
     term_phi = m_mu * lamb2**2 / lamb1 * np.abs(e1)**(2*m_mu - 1) * np.sign(e1)
     u2c = 1 / (N1 * lamb1) * (term_phi - beta_att / gamma_att * sign_ds1 * abs_ds1**(2 - gamma_att) - lamb1 * (M1 * dtheta * dpsi + M2 * dtheta + M3 * dphi**2) + 0)
@@ -256,10 +218,10 @@ def dynamics(state, t):
     term_psi = m_mu * lamb2**2 / lamb1 * np.abs(e5)**(2*m_mu - 1) * np.sign(e5)
     u4c = 1 / (N3 * lamb1) * (term_psi - beta_att / gamma_att * sign_ds5 * abs_ds5**(2 - gamma_att) - lamb1 * (M7 * dphi * dtheta + M8 * dpsi**2) + 0)
 
-    # Attitude switching (Eq 30)
-    u2s = 1 / (N1 * lamb1) * (-k1_att * s1 - k2_att * sign_s1)
-    u3s = 1 / (N2 * lamb1) * (-k1_att * s3 - k2_att * sign_s3)
-    u4s = 1 / (N3 * lamb1) * (-k1_att * s5 - k2_att * sign_s5)
+    # Attitude switching (Eq 30) -- FIXED to use sigma instead of s
+    u2s = 1 / (N1 * lamb1) * (-k1_att * sigma1 - k2_att * sign_sigma1)
+    u3s = 1 / (N2 * lamb1) * (-k1_att * sigma3 - k2_att * sign_sigma3)
+    u4s = 1 / (N3 * lamb1) * (-k1_att * sigma5 - k2_att * sign_sigma5)
 
     u2 = u2c + u2s
     u3 = u3c + u3s
@@ -313,10 +275,10 @@ def dynamics(state, t):
 initial = [0.05, 0, 1, 0, 0.01, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
 # Time
-dt = 0.001
-# dt = 0.0005
-# dt = 0.1
-t = np.arange(0, 80, dt)
+# dt = 0.001
+dt = 0.01
+
+t = np.arange(0, 30, dt)
 
 # Integrate
 state = odeint(dynamics, initial, t)
@@ -406,6 +368,16 @@ for i in range(len(t)):
     sign_s9 = s9 / (np.abs(s9) + eps_pos)
     sign_s11 = s11 / (np.abs(s11) + eps_pos)
 
+    # NEW: Hyperplane variables (Eq 10)
+    sigma7 = s7 + (1 / beta_pos) * sign_ds7 * (abs_ds7 ** gamma_pos)
+    sigma9 = s9 + (1 / beta_pos) * sign_ds9 * (abs_ds9 ** gamma_pos)
+    sigma11 = s11 + (1 / beta_pos) * sign_ds11 * (abs_ds11 ** gamma_pos)
+
+    # Smooth sign for sigma
+    sign_sigma7 = sigma7 / (np.abs(sigma7) + eps_pos)
+    sign_sigma9 = sigma9 / (np.abs(sigma9) + eps_pos)
+    sign_sigma11 = sigma11 / (np.abs(sigma11) + eps_pos)
+
     term_x = m_mu * lamb2**2 / lamb1 * np.abs(ex)**(2*m_mu - 1) * np.sign(ex)
     vxc = ddxdes - M9_base * dx + 1 / lamb1 * (term_x - beta_pos / gamma_pos * sign_ds7 * abs_ds7**(2 - gamma_pos))
     term_y = m_mu * lamb2**2 / lamb1 * np.abs(ey)**(2*m_mu - 1) * np.sign(ey)
@@ -413,9 +385,10 @@ for i in range(len(t)):
     term_z = m_mu * lamb2**2 / lamb1 * np.abs(ez)**(2*m_mu - 1) * np.sign(ez)
     vzc = ddzdes - M11_base * dz + g + 1 / lamb1 * (term_z - beta_pos / gamma_pos * sign_ds11 * abs_ds11**(2 - gamma_pos))
 
-    vxs = 1 / lamb1 * (-k1_pos * s7 - k2_pos * sign_s7)
-    vys = 1 / lamb1 * (-k1_pos * s9 - k2_pos * sign_s9)
-    vzs = 1 / lamb1 * (-k1_pos * s11 - k2_pos * sign_s11)
+    # Position switching -- FIXED to use sigma
+    vxs = 1 / lamb1 * (-k1_pos * sigma7 - k2_pos * sign_sigma7)
+    vys = 1 / lamb1 * (-k1_pos * sigma9 - k2_pos * sign_sigma9)
+    vzs = 1 / lamb1 * (-k1_pos * sigma11 - k2_pos * sign_sigma11)
 
     vx = vxc + vxs
     vy = vyc + vys
@@ -458,6 +431,16 @@ for i in range(len(t)):
     sign_s3 = s3 / (np.abs(s3) + eps_att)
     sign_s5 = s5 / (np.abs(s5) + eps_att)
 
+    # NEW: Hyperplane variables (Eq 27)
+    sigma1 = s1 + (1 / beta_att) * sign_ds1 * (abs_ds1 ** gamma_att)
+    sigma3 = s3 + (1 / beta_att) * sign_ds3 * (abs_ds3 ** gamma_att)
+    sigma5 = s5 + (1 / beta_att) * sign_ds5 * (abs_ds5 ** gamma_att)
+
+    # Smooth sign for sigma
+    sign_sigma1 = sigma1 / (np.abs(sigma1) + eps_att)
+    sign_sigma3 = sigma3 / (np.abs(sigma3) + eps_att)
+    sign_sigma5 = sigma5 / (np.abs(sigma5) + eps_att)
+
     term_phi = m_mu * lamb2**2 / lamb1 * np.abs(e1)**(2*m_mu - 1) * np.sign(e1)
     u2c = 1 / (N1 * lamb1) * (term_phi - beta_att / gamma_att * sign_ds1 * abs_ds1**(2 - gamma_att) - lamb1 * (M1_base * dtheta * dpsi + M2_base * dtheta + M3_base * dphi**2) + 0)
     term_theta = m_mu * lamb2**2 / lamb1 * np.abs(e3)**(2*m_mu - 1) * np.sign(e3)
@@ -465,9 +448,10 @@ for i in range(len(t)):
     term_psi = m_mu * lamb2**2 / lamb1 * np.abs(e5)**(2*m_mu - 1) * np.sign(e5)
     u4c = 1 / (N3 * lamb1) * (term_psi - beta_att / gamma_att * sign_ds5 * abs_ds5**(2 - gamma_att) - lamb1 * (M7_base * dphi * dtheta + M8_base * dpsi**2) + 0)
 
-    u2s = 1 / (N1 * lamb1) * (-k1_att * s1 - k2_att * sign_s1)
-    u3s = 1 / (N2 * lamb1) * (-k1_att * s3 - k2_att * sign_s3)
-    u4s = 1 / (N3 * lamb1) * (-k1_att * s5 - k2_att * sign_s5)
+    # Attitude switching -- FIXED to use sigma
+    u2s = 1 / (N1 * lamb1) * (-k1_att * sigma1 - k2_att * sign_sigma1)
+    u3s = 1 / (N2 * lamb1) * (-k1_att * sigma3 - k2_att * sign_sigma3)
+    u4s = 1 / (N3 * lamb1) * (-k1_att * sigma5 - k2_att * sign_sigma5)
 
     u2 = u2c + u2s
     u3 = u3c + u3s
@@ -498,7 +482,7 @@ plt.plot(t, z, 'b', label='z')
 plt.plot(t, zdes_list, 'r--', label='z_des')
 plt.legend()
 plt.suptitle('Results of the position under the proposed controller')
-plt.savefig('position_sim1.png')
+plt.savefig('position_sim2.png')
 
 plt.figure(figsize=(10,8))
 plt.subplot(3,1,1)
@@ -511,7 +495,7 @@ plt.subplot(3,1,3)
 plt.plot(t, s11_list, 'b')
 plt.ylabel('s_z')
 plt.suptitle('Results of the position sliding variables under the proposed controller')
-plt.savefig('pos_sliding_sim1.png')
+plt.savefig('pos_sliding_sim2.png')
 
 plt.figure(figsize=(10,8))
 plt.subplot(3,1,1)
@@ -524,7 +508,7 @@ plt.subplot(3,1,3)
 plt.plot(t, s5_list, 'b')
 plt.ylabel('s_ψ')
 plt.suptitle('Results of the attitude sliding variables under the proposed controller')
-plt.savefig('att_sliding_sim1.png')
+plt.savefig('att_sliding_sim2.png')
 
 plt.figure(figsize=(10,8))
 plt.subplot(4,1,1)
@@ -540,7 +524,7 @@ plt.subplot(4,1,4)
 plt.plot(t, u4_list, 'b')
 plt.ylabel('u4')
 plt.suptitle('Results of the inputs under the proposed controller')
-plt.savefig('inputs_sim1.png')
+plt.savefig('inputs_sim2.png')
 
 plt.figure(figsize=(8,6))
 plt.plot(x, y, 'b', label='Actual')
@@ -549,7 +533,7 @@ plt.xlabel('x')
 plt.ylabel('y')
 plt.legend()
 plt.title('Results of the path following in 2D space under the proposed controller')
-plt.savefig('2d_path_sim1.png')
+plt.savefig('2d_path_sim2.png')
 
 fig = plt.figure(figsize=(10,8))
 ax = fig.add_subplot(111, projection='3d')
@@ -560,7 +544,7 @@ ax.set_ylabel('y')
 ax.set_zlabel('z')
 ax.legend()
 ax.set_title('Results of the path following in 3D space under the proposed controller')
-plt.savefig('3d_path_sim1.png')
+plt.savefig('3d_path_sim2.png')
 
 # Attitude tracking
 plt.figure(figsize=(10,8))
@@ -577,6 +561,6 @@ plt.plot(t, psi, 'b', label='ψ')
 plt.plot(t, psides_list, 'r--', label='ψ_des')
 plt.legend()
 plt.suptitle('Attitude under the proposed controller')
-plt.savefig('attitude_sim1.png')
+plt.savefig('attitude_sim2.png')
 
 plt.show()
