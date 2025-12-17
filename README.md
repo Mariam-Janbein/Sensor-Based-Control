@@ -61,10 +61,11 @@ NOTE: Change the return of the the function "def disturbances(t)" , to chose whe
 
 The Results directory is organized as follows:
 
-- S1NoDisturbances: Spiral trajectory without disturbances
-- S1-Disturbances: Spiral trajectory with disturbances
-- S2NoDisturbances: Loop and corner trajectory without disturbances
-- S2-Disturbances: Loop and corner trajectory with disturbances
+- S1NoDisturbances: Loop and corner without disturbances
+- S1-Disturbances: Loop and corner with disturbances
+- S2NoDisturbances: Spiral  trajectory without disturbances
+- S2-Disturbances: Spiral  trajectory with disturbances (Eq 43)
+- S2-Disturbances2: Spiral  trajectory with disturbances (Eq 44)
 
 Key observations:
 - Disturbances significantly degrade tracking performance.
@@ -103,10 +104,12 @@ pip install djitellopy
 Two main behaviors were observed during real-world experiments:
 
 1. The drone follows the spiral trajectory well, but flies too close to the ground.  
-   This issue is mainly related to takeoff and altitude (z-axis) control.
+   This issue is mainly related to takeoff and altitude (z-axis) control. 
+   Find code and results in (HardwareResults1).
 
 2. The drone takes off successfully, reaches part of the trajectory, and then starts tracking it.  
    However, oscillations appear due to instability in the z-axis, resulting in an oscillating path.
+   Find code and results in (HardwareResults2).
 
 The corresponding plots and experimental data are available in:
 - HardwareResults1

@@ -32,7 +32,7 @@ N3 = 1 / Iz
 
 # Control parameters from Table 2
 lamb1 = 1.5  # Xi1
-lamb2 = 1.5  # Reduced for stability (paper uses 0.5; you can revert if needed) 0.25 , 0.75 better than 0.5 , 0.95 also better , 1.5 best
+lamb2 = 1.5  # Reduced for stability (paper uses 0.5) 0.25 , 0.75 better than 0.5 , 0.95 also better , 1.5 best
 
 m_mu = 0.9 # mu_i for all
 
@@ -69,16 +69,28 @@ def desired_psi(t):
     ddpsides = 0.0
     return psides, dpsides, ddpsides
 
-# Disturbances for Simulation 2 (Eq 43)
+# Disturbances  (Eq 43)
+# def disturbances(t):
+#     # Dx = 1 + np.sin(0.2 * np.pi * t)
+#     # Dy = 1 + np.cos(0.2 * np.pi * t)
+#     # Dz = 0.5 * np.cos(0.7 * t) + 0.7 * np.sin(0.3 * t)
+#     # Dphi = 2 * np.sin(0.7 * t) + 1
+#     # Dtheta = 2 * np.cos(0.9 * t) + 1
+#     # Dpsi = 2 * np.tanh(0.7 * t)
+#     # return Dx, Dy, Dz, Dphi, Dtheta, Dpsi
+#     return 0,0,0,0,0,0
+
+# Disturbances  (Eq 44)
 def disturbances(t):
-    # Dx = 1 + np.sin(0.2 * np.pi * t)
-    # Dy = 1 + np.cos(0.2 * np.pi * t)
-    # Dz = 0.5 * np.cos(0.7 * t) + 0.7 * np.sin(0.3 * t)
-    # Dphi = 2 * np.sin(0.7 * t) + 1
-    # Dtheta = 2 * np.cos(0.9 * t) + 1
-    # Dpsi = 2 * np.tanh(0.7 * t)
-    # return Dx, Dy, Dz, Dphi, Dtheta, Dpsi
-    return 0,0,0,0,0,0
+    Dx = 0.5 * np.sin(t)
+    Dy = 0.1 * np.cos(t)
+    Dz = 0.5 * np.sin(t) * np.cos(t)
+
+    Dphi = 0.5 * np.cos(0.5 * t)
+    Dtheta = 0.5 * np.sin(0.5 * t)
+    Dpsi = 0.5 * np.sin(0.7 * t) * np.cos(0.7 * t)
+
+    return Dx, Dy, Dz, Dphi, Dtheta, Dpsi
 
 
 # Dynamics function

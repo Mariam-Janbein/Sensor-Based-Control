@@ -125,7 +125,7 @@ def desired_psi(t):
     ddpsides = 0.0
     return psides, dpsides, ddpsides
 
-# Disturbances (0 for Sim1; uncomment Eq 43 for Sim1)
+# Disturbances (0 ; uncomment Eq 43 for Sim1)
 def disturbances(t):
     return 0, 0, 0, 0, 0, 0
 
