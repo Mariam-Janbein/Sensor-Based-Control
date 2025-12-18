@@ -119,6 +119,11 @@ Further controller tuning is required to improve altitude stability and overall 
 
 ---
 
+## More info
+For more project details, refer to Presentation/Report, can be found under root folder
+
+---
+
 ## Conclusion
 The Spiral trajectory showed promising results in both simulation and partial hardware implementation.  
 The Loop and corner trajectory was found to be unsuitable for hardware testing due to sensitivity to disturbances.  
